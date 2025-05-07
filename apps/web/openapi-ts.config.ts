@@ -4,7 +4,8 @@ export default defineConfig({
   input: "http://localhost:8000/openapi.json",
   output: "lib/open-api",
   logs: {
-    path: "./logs",
+    level: "debug",
+    path: "./logs/openapi-ts.log",
   },
   plugins: [
     ...defaultPlugins,

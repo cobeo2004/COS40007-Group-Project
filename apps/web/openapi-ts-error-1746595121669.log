@@ -1,7 +1,0 @@
-Request failed with status 500: Internal Server Error
-Error: Request failed with status 500: Internal Server Error
-    at Ro (/Users/cobeo/Codes/SchoolWork/COS40007-Group-Project/node_modules/@hey-api/openapi-ts/dist/index.cjs:15:95984)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at async Promise.all (index 0)
-    at async QE (/Users/cobeo/Codes/SchoolWork/COS40007-Group-Project/node_modules/@hey-api/openapi-ts/dist/index.cjs:1312:4503)
-    at async start (/Users/cobeo/Codes/SchoolWork/COS40007-Group-Project/node_modules/@hey-api/openapi-ts/bin/index.cjs:131:21)

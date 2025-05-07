@@ -34,6 +34,23 @@
   grid-row-start: 2;
 }
 
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0;
+  color: var(--foreground);
+}
+
+.description {
+  font-size: 18px;
+  text-align: center;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  color: var(--foreground);
+  opacity: 0.8;
+}
+
 .main ol {
   font-family: var(--font-geist-mono);
   padding-left: 0;
