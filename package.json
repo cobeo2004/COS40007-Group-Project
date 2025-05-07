@@ -1,5 +1,5 @@
 {
-  "name": "COS40007-Group-Project",
+  "name": "cos40007",
   "private": true,
   "scripts": {
     "build": "turbo run build",

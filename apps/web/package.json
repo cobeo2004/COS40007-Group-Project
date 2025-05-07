@@ -1,28 +1,37 @@
 {
-  "name": "web",
+  "name": "@cos40007/web",
   "version": "0.1.0",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "run-p dev:*",
+    "dev:next": "next dev --turbopack --port 3000",
+    "dev:hey-api": "openapi-ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "*",
+    "@cos40007/ui": "*",
+    "@hey-api/client-fetch": "^0.10.0",
+    "@hey-api/client-next": "^0.3.0",
+    "@tanstack/react-query": "^5.75.4",
+    "@tanstack/react-query-devtools": "^5.75.4",
     "next": "^15.3.0",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "zod": "^3.24.4"
   },
   "devDependencies": {
-    "@repo/eslint-config": "*",
-    "@repo/typescript-config": "*",
+    "@cos40007/eslint-config": "*",
+    "@cos40007/typescript-config": "*",
+    "@hey-api/openapi-ts": "^0.67.1",
     "@types/node": "^22.15.3",
     "@types/react": "19.1.0",
     "@types/react-dom": "19.1.1",
     "eslint": "^9.25.0",
+    "npm-run-all": "^4.1.5",
     "typescript": "5.8.2"
   }
 }

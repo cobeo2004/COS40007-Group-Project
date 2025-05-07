@@ -1,6 +1,10 @@
 import Image, { type ImageProps } from "next/image";
 import { Button } from "@repo/ui/button";
 import styles from "./page.module.css";
+import { getQueryClient } from "../utils/server";
+import { sayHelloGetOptions } from "../lib/open-api/@tanstack/react-query.gen";
+import { Suspense } from "react";
+import DisplayResponse from "./_components/display-response";
 
 type Props = Omit<ImageProps, "src"> & {
   srcLight: string;
@@ -18,7 +22,9 @@ const ThemeImage = (props: Props) => {
   );
 };
 
-export default function Home() {
+export default async function Home() {
+  const qc = getQueryClient();
+  await qc.prefetchQuery(sayHelloGetOptions());
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -37,7 +43,9 @@ export default function Home() {
           </li>
           <li>Save and see your changes instantly.</li>
         </ol>
-
+        <Suspense fallback={<div>Loading...</div>}>
+          <DisplayResponse />
+        </Suspense>
         <div className={styles.ctas}>
           <a
             className={styles.primary}
