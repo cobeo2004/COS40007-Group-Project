@@ -4,3 +4,5 @@ numpy==1.24.3
 opencv-python==4.7.0.72
 opencv-python-headless==4.7.0.72
 pyyaml
+plotly
+av
