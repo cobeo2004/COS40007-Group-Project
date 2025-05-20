@@ -41,9 +41,9 @@ with col2:
 
     ### 🔧 Technology Stack
     - Python & Streamlit
-    - Deep Learning (CNN, Mask R-CNN)
+    - Deep Learning (YOLOv8)
     - Computer Vision Libraries
-    - Data Annotation Tools
+    - Roboflow
     """)
 
 # Navigation section
@@ -116,8 +116,6 @@ with st.sidebar:
     st.markdown("---")
     st.subheader("Technical Details")
     st.markdown("""
-    - Model Accuracy: 94%
-    - Defect Types: 8
-    - Processing Time: <2s
+    To be updated
     """)
 
