@@ -5,20 +5,24 @@ from PIL import Image
 import os
 import time
 import json
-import pandas as pd # Added for creating DataFrames for charts
+import pandas as pd  # Added for creating DataFrames for charts
 
 # --- Session State Initialization ---
 # This MUST be at the top, after imports, before any other code that might use session_state
-if 'prediction_history' not in st.session_state:
+if "prediction_history" not in st.session_state:
     st.session_state.prediction_history = []  # List of analysis detail dicts
-if 'active_analysis_details' not in st.session_state:
-    st.session_state.active_analysis_details = None # Dict for current/selected view
-if 'confirm_delete_history' not in st.session_state: # For delete confirmation
+if "active_analysis_details" not in st.session_state:
+    st.session_state.active_analysis_details = None  # Dict for current/selected view
+if "confirm_delete_history" not in st.session_state:  # For delete confirmation
     st.session_state.confirm_delete_history = False
-if 'selected_target_classes' not in st.session_state: # For class filter persistence
-    st.session_state.selected_target_classes = ["Crack", "Rust", "Tower Structure"] # Default to all
-if 'confidence_threshold' not in st.session_state: # For confidence threshold
-    st.session_state.confidence_threshold = 0.25 # Default threshold
+if "selected_target_classes" not in st.session_state:  # For class filter persistence
+    st.session_state.selected_target_classes = [
+        "Crack",
+        "Rust",
+        "Tower Structure",
+    ]  # Default to all
+if "confidence_threshold" not in st.session_state:  # For confidence threshold
+    st.session_state.confidence_threshold = 0.25  # Default threshold
 
 # Make sure 'packages' is in the Python path or use relative imports
 # This might require adjusting your project structure or PYTHONPATH
@@ -34,7 +38,7 @@ SEG_MODEL_PATH = os.path.join(BASE_DIR, "models", "segment.pt")
 
 UPLOAD_DIR = os.path.join(BASE_DIR, "data", "uploads")
 OUTPUT_DIR = os.path.join(BASE_DIR, "data", "predictions")
-HISTORY_DIR = os.path.join(BASE_DIR, "data", "history") # Directory for history file
+HISTORY_DIR = os.path.join(BASE_DIR, "data", "history")  # Directory for history file
 HISTORY_FILE_PATH = os.path.join(HISTORY_DIR, "prediction_history.json")
 
 # Assuming these are defined in image_model_predictor or accessible
@@ -52,57 +56,71 @@ print(f"[DEBUG] HISTORY_DIR: {HISTORY_DIR}")
 print(f"[DEBUG] HISTORY_FILE_PATH: {HISTORY_FILE_PATH}")
 print(f"[DEBUG] BBOX_MODEL_PATH: {BBOX_MODEL_PATH}")
 print(f"[DEBUG] SEG_MODEL_PATH: {SEG_MODEL_PATH}")
-print(f"[DEBUG] Initializing script. Confirm delete flag: {st.session_state.confirm_delete_history}")
-print(f"[DEBUG] Initial selected_target_classes: {st.session_state.selected_target_classes}")
+print(
+    f"[DEBUG] Initializing script. Confirm delete flag: {st.session_state.confirm_delete_history}"
+)
+print(
+    f"[DEBUG] Initial selected_target_classes: {st.session_state.selected_target_classes}"
+)
 print(f"[DEBUG] Initial confidence_threshold: {st.session_state.confidence_threshold}")
 
 # Create directories if they don't exist
 try:
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
-    os.makedirs(HISTORY_DIR, exist_ok=True) # Ensure history directory exists
+    os.makedirs(HISTORY_DIR, exist_ok=True)  # Ensure history directory exists
     print(f"[DEBUG] Directories {UPLOAD_DIR}, {OUTPUT_DIR}, and {HISTORY_DIR} ensured.")
 except OSError as e:
     st.error(f"Error creating data directories: {e}")
     print(f"[ERROR] Error creating data directories: {e}")
 
+
 # --- History Persistence Functions ---
 def load_history_from_file():
     if os.path.exists(HISTORY_FILE_PATH):
         try:
-            with open(HISTORY_FILE_PATH, 'r') as f:
+            with open(HISTORY_FILE_PATH, "r") as f:
                 history = json.load(f)
                 print(f"[DEBUG] Loaded {len(history)} items from history file.")
                 return history
         except json.JSONDecodeError:
-            print(f"[ERROR] Could not decode JSON from history file: {HISTORY_FILE_PATH}. Starting fresh.")
+            print(
+                f"[ERROR] Could not decode JSON from history file: {HISTORY_FILE_PATH}. Starting fresh."
+            )
             return []
         except Exception as e:
-            print(f"[ERROR] Could not load history file {HISTORY_FILE_PATH}: {e}. Starting fresh.")
+            print(
+                f"[ERROR] Could not load history file {HISTORY_FILE_PATH}: {e}. Starting fresh."
+            )
             return []
     return []
 
+
 def save_history_to_file(history_data):
     try:
-        with open(HISTORY_FILE_PATH, 'w') as f:
+        with open(HISTORY_FILE_PATH, "w") as f:
             json.dump(history_data, f, indent=4)
         print(f"[DEBUG] Saved {len(history_data)} items to history file.")
     except Exception as e:
         st.error(f"Error saving history to file: {e}")
         print(f"[ERROR] Could not save history file {HISTORY_FILE_PATH}: {e}")
 
+
 # Load history into session state at the start if it's empty
 # This ensures that on the first run of a session, history is loaded from file.
 # Subsequent runs in the same session will use the existing st.session_state.prediction_history.
-if not st.session_state.prediction_history: # Only load if session history is currently empty
+if (
+    not st.session_state.prediction_history
+):  # Only load if session history is currently empty
     # This check is important to prevent reloading from file on every rerun within a session,
     # which would overwrite in-memory changes made during that session until the next save.
     # However, for page reloads which reset session_state, this will trigger.
     # A more robust way for true persistence might involve checking a flag or timestamp.
     # For now, this loads history if the session_state list is empty, common after a page refresh.
     loaded_history = load_history_from_file()
-    if loaded_history: # Check if anything was actually loaded
+    if loaded_history:  # Check if anything was actually loaded
         st.session_state.prediction_history = loaded_history
+
 
 # Cached function to load models
 @st.cache_resource
@@ -128,12 +146,15 @@ def load_models():
         print(f"[CRITICAL ERROR] loading models: {e}")
         return None, None
 
+
 # Page configuration
 st.set_page_config(page_title="Image Prediction", page_icon="🖼️", layout="wide")
 
 # Header
 st.title("🖼️ Image-based Structural Defect Detection")
-st.markdown("Upload an image, set filters, and analyze. Or select a past analysis from history (sidebar).")
+st.markdown(
+    "Upload an image, set filters, and analyze. Or select a past analysis from history (sidebar)."
+)
 
 # Load models and instantiate predictor
 bbox_model_loader, seg_model_loader = load_models()
@@ -155,13 +176,20 @@ if not st.session_state.prediction_history:
 else:
     # Display newest first
     for i, entry in enumerate(reversed(st.session_state.prediction_history)):
-        if st.sidebar.button(f"{entry.get('timestamp', 'N/A')} - {entry.get('original_filename', 'Unknown')}", key=f"history_{entry.get('id', i)}"):
+        if st.sidebar.button(
+            f"{entry.get('timestamp', 'N/A')} - {entry.get('original_filename', 'Unknown')}",
+            key=f"history_{entry.get('id', i)}",
+        ):
             st.session_state.active_analysis_details = entry
-            st.session_state.confirm_delete_history = False # Reset delete confirmation
+            st.session_state.confirm_delete_history = False  # Reset delete confirmation
             # When loading from history, also update the filter and threshold display to match that analysis
-            st.session_state.selected_target_classes = entry.get('targeted_classes', AVAILABLE_CLASSES)
-            st.session_state.confidence_threshold = entry.get('confidence_threshold', 0.25)
-            st.rerun() # Explicitly rerun to update the main display
+            st.session_state.selected_target_classes = entry.get(
+                "targeted_classes", AVAILABLE_CLASSES
+            )
+            st.session_state.confidence_threshold = entry.get(
+                "confidence_threshold", 0.25
+            )
+            st.rerun()  # Explicitly rerun to update the main display
 
 if image_predictor:
     st.sidebar.success("Models ready!")
@@ -171,7 +199,9 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("Manage History")
 
 if st.session_state.confirm_delete_history:
-    st.sidebar.warning("Are you sure you want to delete all history and associated files? This cannot be undone.")
+    st.sidebar.warning(
+        "Are you sure you want to delete all history and associated files? This cannot be undone."
+    )
     if st.sidebar.button("Yes, Delete All History", type="primary"):
         print("[DEBUG] Confirm Delete All History button clicked.")
         deleted_files_count = 0
@@ -182,7 +212,10 @@ if st.session_state.confirm_delete_history:
         history_to_delete = list(st.session_state.prediction_history)
 
         for entry in history_to_delete:
-            paths_to_delete = [entry.get('input_image_path'), entry.get('output_image_path')]
+            paths_to_delete = [
+                entry.get("input_image_path"),
+                entry.get("output_image_path"),
+            ]
             for path in paths_to_delete:
                 if path and os.path.exists(path):
                     try:
@@ -192,17 +225,21 @@ if st.session_state.confirm_delete_history:
                     except OSError as e:
                         error_deleting_count += 1
                         print(f"[ERROR] Could not delete file {path}: {e}")
-                elif path: # Path was recorded but file doesn't exist
-                    not_found_count +=1
-                    print(f"[DEBUG] File not found for deletion (already deleted or never saved?): {path}")
+                elif path:  # Path was recorded but file doesn't exist
+                    not_found_count += 1
+                    print(
+                        f"[DEBUG] File not found for deletion (already deleted or never saved?): {path}"
+                    )
 
         st.session_state.prediction_history = []
         st.session_state.active_analysis_details = None
-        save_history_to_file([]) # Save empty list to the JSON file
-        st.session_state.confirm_delete_history = False # Reset confirmation flag
+        save_history_to_file([])  # Save empty list to the JSON file
+        st.session_state.confirm_delete_history = False  # Reset confirmation flag
 
         # Provide feedback
-        feedback_message = f"History deletion complete. {deleted_files_count} files deleted."
+        feedback_message = (
+            f"History deletion complete. {deleted_files_count} files deleted."
+        )
         if not_found_count > 0:
             feedback_message += f" {not_found_count} files were not found (may have been previously deleted)."
         if error_deleting_count > 0:
@@ -214,12 +251,14 @@ if st.session_state.confirm_delete_history:
     if st.sidebar.button("Cancel"):
         st.session_state.confirm_delete_history = False
         st.rerun()
-elif st.session_state.prediction_history: # Only show delete button if there is history
+elif st.session_state.prediction_history:  # Only show delete button if there is history
     if st.sidebar.button("Delete Prediction History"):
         st.session_state.confirm_delete_history = True
-        print("[DEBUG] Delete Prediction History button clicked. Set confirm_delete_history to True.")
+        print(
+            "[DEBUG] Delete Prediction History button clicked. Set confirm_delete_history to True."
+        )
         st.rerun()
-else: # No history, no need for delete button/confirmation state
+else:  # No history, no need for delete button/confirmation state
     st.session_state.confirm_delete_history = False
 
 # --- Main Page: File Uploader, Filters, and Analysis ---
@@ -239,18 +278,19 @@ if uploaded_file is not None or st.session_state.active_analysis_details is not 
         st.multiselect(
             "Defect types to detect:",
             options=AVAILABLE_CLASSES,
-            default=st.session_state.selected_target_classes, # Reflects current session state
-            key="selected_target_classes" # Binds to st.session_state.selected_target_classes
+            default=st.session_state.selected_target_classes,  # Reflects current session state
+            key="selected_target_classes",  # Binds to st.session_state.selected_target_classes
         )
     with filter_col2:
         # Similar to multiselect, slider now binds directly via its key.
         # The 'value' arg ensures it reflects session_state.confidence_threshold.
         st.slider(
             "Confidence threshold for detections:",
-            min_value=0.0, max_value=1.0,
-            value=st.session_state.confidence_threshold, # Reflects current session state
+            min_value=0.0,
+            max_value=1.0,
+            value=st.session_state.confidence_threshold,  # Reflects current session state
             step=0.05,
-            key="confidence_threshold" # Binds to st.session_state.confidence_threshold
+            key="confidence_threshold",  # Binds to st.session_state.confidence_threshold
         )
 
 if uploaded_file is not None:
@@ -259,14 +299,18 @@ if uploaded_file is not None:
     else:
         # The key for analyze_button must be unique and should ideally not change if the file uploader state changes.
         # Using a more stable part of the uploaded_file object if available, or a simpler key.
-        analyze_button_key = f"analyze_btn_{uploaded_file.name if uploaded_file else 'no_file'}"
+        analyze_button_key = (
+            f"analyze_btn_{uploaded_file.name if uploaded_file else 'no_file'}"
+        )
         if st.button("3. Analyze Uploaded Image", key=analyze_button_key):
             st.session_state.confirm_delete_history = False
 
             # Use the values from session_state which are now controlled by main page widgets
             selected_classes_for_prediction = st.session_state.selected_target_classes
             current_confidence_threshold = st.session_state.confidence_threshold
-            print(f"[DEBUG] Analyzing with target classes: {selected_classes_for_prediction}, Threshold: {current_confidence_threshold}")
+            print(
+                f"[DEBUG] Analyzing with target classes: {selected_classes_for_prediction}, Threshold: {current_confidence_threshold}"
+            )
 
             with st.spinner("Analyzing for structural defects..."):
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
@@ -283,7 +327,7 @@ if uploaded_file is not None:
                     st.error(f"Unexpected error saving uploaded image: {e}")
                     st.session_state.active_analysis_details = None
 
-                pil_image = Image.open(uploaded_file).convert('RGB')
+                pil_image = Image.open(uploaded_file).convert("RGB")
                 original_image_rgb = np.array(pil_image)
                 original_image_bgr = cv2.cvtColor(original_image_rgb, cv2.COLOR_RGB2BGR)
 
@@ -291,7 +335,7 @@ if uploaded_file is not None:
                     processed_image_bgr, detections = image_predictor.predict_on_image(
                         original_image_bgr,
                         target_classes=selected_classes_for_prediction,
-                        confidence_threshold=current_confidence_threshold # Pass threshold
+                        confidence_threshold=current_confidence_threshold,  # Pass threshold
                     )
                     output_filename = f"pred_{input_filename}"
                     output_image_path = os.path.join(OUTPUT_DIR, output_filename)
@@ -310,13 +354,18 @@ if uploaded_file is not None:
                         "detections": detections,
                         "original_filename": uploaded_file.name,
                         "targeted_classes": selected_classes_for_prediction,
-                        "confidence_threshold": current_confidence_threshold # Store threshold
+                        "confidence_threshold": current_confidence_threshold,  # Store threshold
                     }
                     st.session_state.active_analysis_details = current_analysis
                     history_updated = False
-                    if not any(h['id'] == unique_timestamp_id for h in st.session_state.prediction_history):
+                    if not any(
+                        h["id"] == unique_timestamp_id
+                        for h in st.session_state.prediction_history
+                    ):
                         st.session_state.prediction_history.append(current_analysis)
-                        st.session_state.prediction_history = st.session_state.prediction_history[-10:]
+                        st.session_state.prediction_history = (
+                            st.session_state.prediction_history[-10:]
+                        )
                         history_updated = True
                     if history_updated:
                         save_history_to_file(st.session_state.prediction_history)
@@ -330,26 +379,36 @@ if uploaded_file is not None:
 # --- Display Area for Active or Selected Historical Analysis ---
 if st.session_state.active_analysis_details:
     details = st.session_state.active_analysis_details
-    analysis_id = details.get('id', 'N/A')
-    analysis_timestamp = details.get('timestamp', 'N/A')
-    original_filename = details.get('original_filename', 'Unknown')
-    input_image_path = details.get('input_image_path')
-    output_image_path = details.get('output_image_path')
-    current_detections = details.get('detections', [])
-    targeted_classes_display = details.get('targeted_classes', AVAILABLE_CLASSES) # Default to all if not found
-    confidence_threshold_display = details.get('confidence_threshold', 0.25) # Default if not found
+    analysis_id = details.get("id", "N/A")
+    analysis_timestamp = details.get("timestamp", "N/A")
+    original_filename = details.get("original_filename", "Unknown")
+    input_image_path = details.get("input_image_path")
+    output_image_path = details.get("output_image_path")
+    current_detections = details.get("detections", [])
+    targeted_classes_display = details.get(
+        "targeted_classes", AVAILABLE_CLASSES
+    )  # Default to all if not found
+    confidence_threshold_display = details.get(
+        "confidence_threshold", 0.25
+    )  # Default if not found
 
     st.markdown(f"### Analysis Results: {analysis_timestamp} - {original_filename}")
     # Display the filters used for this specific analysis
-    st.caption(f"Detections shown for: **{', '.join(targeted_classes_display) if targeted_classes_display else 'None'}** | Confidence Threshold Used: **{confidence_threshold_display:.2f}**")
+    st.caption(
+        f"Detections shown for: **{', '.join(targeted_classes_display) if targeted_classes_display else 'None'}** | Confidence Threshold Used: **{confidence_threshold_display:.2f}**"
+    )
 
     input_exists = input_image_path and os.path.exists(input_image_path)
     output_exists = output_image_path and os.path.exists(output_image_path)
 
     if not input_exists:
-        st.error(f"Input image not found: {input_image_path}. It may have been moved, deleted, or failed to save.")
+        st.error(
+            f"Input image not found: {input_image_path}. It may have been moved, deleted, or failed to save."
+        )
     if not output_exists:
-        st.error(f"Output image not found: {output_image_path}. It may have been moved, deleted, or failed to save.")
+        st.error(
+            f"Output image not found: {output_image_path}. It may have been moved, deleted, or failed to save."
+        )
 
     if input_exists and output_exists:
         try:
@@ -360,7 +419,11 @@ if st.session_state.active_analysis_details:
                 st.subheader("Original Image")
                 if input_exists:
                     try:
-                        st.image(original_img_pil, caption=original_filename, use_column_width=True)
+                        st.image(
+                            original_img_pil,
+                            caption=original_filename,
+                            use_column_width=True,
+                        )
                     except Exception as e:
                         st.error(f"Error loading original image: {e}")
                 else:
@@ -369,7 +432,11 @@ if st.session_state.active_analysis_details:
                 st.subheader("Processed Image with Detections")
                 if output_exists:
                     try:
-                        st.image(processed_img_pil, caption="Processed Detections", use_column_width=True)
+                        st.image(
+                            processed_img_pil,
+                            caption="Processed Detections",
+                            use_column_width=True,
+                        )
                     except Exception as e:
                         st.error(f"Error loading processed image: {e}")
                 else:
@@ -384,28 +451,41 @@ if st.session_state.active_analysis_details:
         detection_data = []
         for i, det in enumerate(current_detections):
             # Ensure confidence is a float, default to 0 if not applicable or missing
-            confidence = det.get('confidence')
+            confidence = det.get("confidence")
             try:
                 confidence_float = float(confidence) if confidence is not None else 0.0
             except ValueError:
-                confidence_float = 0.0 # Default if conversion fails
-            detection_data.append({
-                "Detection": f"{det.get('type', 'Unknown')} #{i+1}",
-                "Type": det.get('type', 'Unknown'),
-                "Confidence": confidence_float
-            })
+                confidence_float = 0.0  # Default if conversion fails
+            detection_data.append(
+                {
+                    "Detection": f"{det.get('type', 'Unknown')} #{i+1}",
+                    "Type": det.get("type", "Unknown"),
+                    "Confidence": confidence_float,
+                }
+            )
         df_detections = pd.DataFrame(detection_data)
 
         chart_col1, chart_col2 = st.columns(2)
 
         with chart_col1:
             st.markdown("**Confidence Levels per Detection**")
-            if not df_detections.empty and 'Confidence' in df_detections.columns and df_detections['Confidence'].sum() > 0:
+            if (
+                not df_detections.empty
+                and "Confidence" in df_detections.columns
+                and df_detections["Confidence"].sum() > 0
+            ):
                 # Ensure 'Detection' is the index for better labeling in bar_chart if needed
                 # For st.bar_chart, it expects y to be the column to plot if x is not specified, or data with named columns.
-                chart_df_confidence = df_detections[df_detections['Confidence'] > 0].set_index('Detection')[['Confidence']]
+                chart_df_confidence = df_detections[
+                    df_detections["Confidence"] > 0
+                ].set_index("Detection")[["Confidence"]]
                 if not chart_df_confidence.empty:
-                    st.bar_chart(chart_df_confidence.sort_values(by='Confidence', ascending=False), height=400) # Sort in ascending order
+                    st.bar_chart(
+                        chart_df_confidence.sort_values(
+                            by="Confidence", ascending=False
+                        ),
+                        height=400,
+                    )  # Sort in ascending order
                 else:
                     st.info("No detections with confidence > 0 to display in chart.")
             else:
@@ -413,58 +493,64 @@ if st.session_state.active_analysis_details:
 
         with chart_col2:
             st.markdown("**Defect Type Counts**")
-            if not df_detections.empty and 'Type' in df_detections.columns:
-                type_counts = df_detections['Type'].value_counts().reset_index()
-                type_counts.columns = ['Type', 'Count']
+            if not df_detections.empty and "Type" in df_detections.columns:
+                type_counts = df_detections["Type"].value_counts().reset_index()
+                type_counts.columns = ["Type", "Count"]
                 # Create a color map for different defect types
-                colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD']
+                colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEEAD"]
                 if not type_counts.empty:
                     # Create a Plotly bar chart with custom colors
                     fig = {
-                        'data': [{
-                            'x': type_counts['Type'],
-                            'y': type_counts['Count'],
-                            'type': 'bar',
-                            'marker': {
-                                'color': colors[:len(type_counts)]
+                        "data": [
+                            {
+                                "x": type_counts["Type"],
+                                "y": type_counts["Count"],
+                                "type": "bar",
+                                "marker": {"color": colors[: len(type_counts)]},
                             }
-                        }],
-                        'layout': {
-                            'height': 400,
-                            'margin': {'t': 10}
-                        }
+                        ],
+                        "layout": {"height": 400, "margin": {"t": 10}},
                     }
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("No defect types to count.")
             else:
                 st.info("No type data for defect counts chart.")
-        st.markdown("--- --- --- --- ---") # Visual separator
+        st.markdown("--- --- --- --- ---")  # Visual separator
         st.subheader("Detailed Detection Summary (Scrollable)")
         # Scrollable container for detection details
         # Max height for the scrollable area, adjust as needed
-        with st.container(height=300): # Streamlit native container with height for scroll
+        with st.container(
+            height=300
+        ):  # Streamlit native container with height for scroll
             for detection in current_detections:
                 det_info = f"- **Type**: {detection.get('type', 'N/A')}"
-                if 'confidence' in detection:
-                    conf = detection['confidence']
+                if "confidence" in detection:
+                    conf = detection["confidence"]
                     # Format confidence nicely, handling non-float cases
-                    confidence_str = f"{conf:.2f}" if isinstance(conf, float) else str(conf)
+                    confidence_str = (
+                        f"{conf:.2f}" if isinstance(conf, float) else str(conf)
+                    )
                     det_info += f", **Confidence**: {confidence_str}"
-                if 'bbox' in detection:
+                if "bbox" in detection:
                     det_info += f", **BBox**: {detection['bbox']}"
-                if 'class_id' in detection: # Assuming your predictor might add class_id
+                if (
+                    "class_id" in detection
+                ):  # Assuming your predictor might add class_id
                     det_info += f", **Class ID**: {detection['class_id']}"
                 st.markdown(det_info)
     else:
         st.info("No specific defects reported for this image based on current filters.")
 elif uploaded_file is None:
     # This message shows when the app starts and no file is uploaded yet, and no history is selected.
-    st.info("Upload an image to begin analysis or select an item from the history sidebar.")
+    st.info(
+        "Upload an image to begin analysis or select an item from the history sidebar."
+    )
 
 # Instructions expander
 with st.expander("How to use this tool"):
-    st.markdown("""
+    st.markdown(
+        """
     1. Ensure models are correctly placed: `bbox.pt` and `segment.pt` in the `models/` directory relative to the project root.
     2. Upload an image (JPG, JPEG, PNG).
     3. Set defect type filters and confidence threshold in the main area below the uploader.
@@ -472,4 +558,5 @@ with st.expander("How to use this tool"):
     5. View results. Uploaded & processed images are saved in `data/uploads/` & `data/predictions/`. History is in `data/history/`.
     6. Past analyses from the sidebar show results based on the filters/threshold active *at the time of their analysis*. The current filter/threshold controls *new* analyses.
     7. Use the "Delete Prediction History" button in the sidebar to clear all history and associated image files.
-    """)
+    """
+    )

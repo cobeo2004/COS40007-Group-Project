@@ -1,7 +1,9 @@
 import streamlit as st
 
 # Page configuration
-st.set_page_config(page_title="Structural Defect Detection", page_icon="🔍", layout="wide")
+st.set_page_config(
+    page_title="Structural Defect Detection", page_icon="🔍", layout="wide"
+)
 
 # Header section with title and subtitle
 st.title("🏗️ Structural Defect Detection AI")
@@ -11,7 +13,8 @@ st.subheader("Theme 4 - Structural/Chemical Engineering | Group 2")
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.markdown("""
+    st.markdown(
+        """
     ### 📋 Project Overview
     This AI system detects structural defects from image data to assist in maintenance and inspection of infrastructure.
     The model can identify various types of structural flaws including cracks, corrosion, and other defects that
@@ -28,10 +31,12 @@ with col1:
     - Support for image, video, and real-time analysis
     - High-resolution drone photography compatibility
     - Confidence scoring for detected defects
-    """)
+    """
+    )
 
 with col2:
-    st.markdown("""
+    st.markdown(
+        """
     ### 👨‍💻 Team Members
     - Aidid Yassin (103992731)
     - Leon Nhor (104004239)
@@ -44,13 +49,15 @@ with col2:
     - Deep Learning (YOLOv8)
     - Computer Vision Libraries
     - Roboflow
-    """)
+    """
+    )
 
 # Navigation section
 st.markdown("---")
 st.header("📊 How to Use This Application")
 
-st.markdown("""
+st.markdown(
+    """
 ### Navigation Instructions
 
 This application offers three different ways to detect structural defects:
@@ -71,7 +78,8 @@ This application offers three different ways to detect structural defects:
    - Point your camera at structures for real-time analysis
 
 Select your preferred method from the sidebar navigation menu above ☝️
-""")
+"""
+)
 
 # Additional project information
 st.markdown("---")
@@ -82,24 +90,30 @@ col1, col2, col3 = st.columns(3)
 
 with col1:
     st.subheader("Research Background")
-    st.markdown("""
+    st.markdown(
+        """
     Our research focuses on applying computer vision and deep learning to automate structural inspections,
     which have traditionally been labor-intensive and sometimes dangerous manual processes.
-    """)
+    """
+    )
 
 with col2:
     st.subheader("Model Training")
-    st.markdown("""
+    st.markdown(
+        """
     The AI models were trained on thousands of annotated images of various structural defects
     across different infrastructure types including bridges, buildings, and industrial facilities.
-    """)
+    """
+    )
 
 with col3:
     st.subheader("Future Development")
-    st.markdown("""
+    st.markdown(
+        """
     Future versions will include severity scoring, maintenance recommendations,
     and integration with structural monitoring systems for continuous assessment.
-    """)
+    """
+    )
 
 # Navigation sidebar
 with st.sidebar:
@@ -109,13 +123,14 @@ with st.sidebar:
     # Project stats
     st.subheader("Project Stats")
     col1, col2 = st.columns(2)
-    col1.metric("⚙️ Models", "3")
-    col2.metric("🖼️ Dataset", "1000+ images")
+    col1.metric("⚙️ Models", "2")
+    col2.metric("🖼️ Dataset", "900+ images")
 
     # Technical details
     st.markdown("---")
     st.subheader("Technical Details")
-    st.markdown("""
+    st.markdown(
+        """
     To be updated
-    """)
-
+    """
+    )
