@@ -37,6 +37,28 @@ This AI system detects structural defects from image data to assist in maintenan
 
 ## 📊 How to Use This Application
 
+### 📦 Installation
+
+0. Required Python Version: 3.12
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/cobeo2004/COS40007-Group-Project
+```
+
+2. Install the required packages
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Run the application
+
+```bash
+streamlit run 1_Home_Page.py
+```
+
 ### Navigation Instructions
 
 This application offers three different ways to detect structural defects:
