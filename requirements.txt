@@ -6,3 +6,7 @@ opencv-python-headless
 pyyaml
 plotly
 av
+torch
+torchvision
+ultralytics
+pandas
