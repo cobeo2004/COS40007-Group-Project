@@ -6,4 +6,3 @@ opencv-python-headless
 pyyaml
 plotly
 av
-tkinter

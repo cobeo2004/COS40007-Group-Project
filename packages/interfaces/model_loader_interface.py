@@ -1,6 +1,6 @@
 from typing import Tuple
 from pathlib import Path
-from tkinter import Image
+from PIL.Image import Image
 import numpy as np
 import torch
 from ultralytics import YOLO
