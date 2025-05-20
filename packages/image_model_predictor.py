@@ -8,7 +8,7 @@ from typing import TypeVar, Union, Literal
 from interfaces.model_loader_interface import ModelLoaderImageType
 
 
-class ModelPredictor:
+class ImageModelPredictor:
     def __init__(self, bbox_model: BoundingBoxModelLoader, seg_model: SegmentationModelLoader):
         self.bbox_model = bbox_model
         self.seg_model = seg_model
