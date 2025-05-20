@@ -53,7 +53,25 @@ git clone https://github.com/cobeo2004/COS40007-Group-Project
 pip install -r requirements.txt
 ```
 
-3. Run the application
+3. Apply `PYTHONPATH`, could be either export or set it via `.env` file
+
+```bash
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+```
+
+or
+
+```bash
+PYTHONPATH=$(pwd) streamlit run 1_Home_Page.py
+```
+
+or
+
+```env
+PYTHONPATH=$(pwd)
+```
+
+4. Run the application
 
 ```bash
 streamlit run 1_Home_Page.py
