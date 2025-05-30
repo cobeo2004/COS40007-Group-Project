@@ -2,7 +2,6 @@ streamlit
 Pillow
 numpy
 opencv-python
-opencv-python-headless
 pyyaml
 plotly
 av
