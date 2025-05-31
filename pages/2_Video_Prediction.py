@@ -334,42 +334,21 @@ if active_details_to_display:
     st.subheader(
         f"Analysis Details: {details.get('timestamp', 'N/A')} - {details.get('original_video_filename', 'Unknown Video')}")
 
-    # Display Original and Processed Videos
-    col_orig, col_proc = st.columns(2)
+    # Display Original Video
     original_video_path = details.get('original_video_path')
-    processed_video_path_from_history = details.get('processed_video_path')
 
-    with col_orig:
-        st.markdown("#### Original Video")
-        if original_video_path and os.path.exists(original_video_path):
-            try:
-                st.video(original_video_path)
-            except Exception as e:
-                st.error(
-                    f"Could not load original video: {e}. Path: {original_video_path}")
-        elif original_video_path:
-            st.warning(
-                f"Original video file not found at: {original_video_path}. It may have been moved or deleted.")
-        else:
-            st.info("Original video path not recorded.")
-
-    with col_proc:
-        st.markdown("#### Processed Video (with Detections)")
-        if processed_video_path_from_history and os.path.exists(processed_video_path_from_history):
-            try:
-                st.video(processed_video_path_from_history)
-            except Exception as e:
-                st.error(
-                    f"Could not load processed video: {e}. Path: {processed_video_path_from_history}")
-        elif details.get('parameters', {}).get('save_output') and processed_video_path_from_history:
-            st.warning(
-                f"Processed video file not found at: {processed_video_path_from_history}. It may have been moved or deleted.")
-        elif details.get('parameters', {}).get('save_output'):
-            st.info(
-                "Processed video was meant to be saved, but is not available. It might have had no detections or failed to save.")
-        else:
-            st.info(
-                "Processed video was not saved (as per analysis settings or no detections).")
+    st.markdown("#### Original Video")
+    if original_video_path and os.path.exists(original_video_path):
+        try:
+            st.video(original_video_path)
+        except Exception as e:
+            st.error(
+                f"Could not load original video: {e}. Path: {original_video_path}")
+    elif original_video_path:
+        st.warning(
+            f"Original video file not found at: {original_video_path}. It may have been moved or deleted.")
+    else:
+        st.info("Original video path not recorded.")
 
     # Tabs for detailed results
     tab_summary, tab_frame_analysis, tab_timeline, tab_output_params = st.tabs([
@@ -446,6 +425,7 @@ if active_details_to_display:
     with tab_output_params:
         st.markdown("#### Analysis Parameters & Output")
         st.json(analysis_params)
+        processed_video_path_from_history = details.get('processed_video_path')
         if processed_video_path_from_history and os.path.exists(processed_video_path_from_history):
             st.markdown(
                 f"**Processed Video Saved To:** `{processed_video_path_from_history}`")
