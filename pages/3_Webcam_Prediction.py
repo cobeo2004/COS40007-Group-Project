@@ -6,16 +6,11 @@ import numpy as np
 from PIL import Image
 import time
 import os
-import json  # For history persistence
+import json
 
 st.set_page_config(page_title="Webcam Prediction",
                    page_icon="📹", layout="wide")
 
-# --- Package Imports ---
-# Adjust paths as necessary if your project structure is different
-# Assuming 'packages' is in PYTHONPATH or structure allows this import
-
-# --- Constants and Configuration ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BBOX_MODEL_PATH = os.path.join(BASE_DIR, "models", "bbox.pt")
 SEG_MODEL_PATH = os.path.join(BASE_DIR, "models", "segment.pt")
@@ -82,7 +77,6 @@ if "frame_count" not in st.session_state:
 if "fps" not in st.session_state:
     st.session_state.fps = 0.0
 if "snapshots" not in st.session_state:
-    # Load from file if empty
     st.session_state.snapshots = load_snapshot_history_from_file()
 if "live_predictor" not in st.session_state:
     st.session_state.live_predictor = None
@@ -90,12 +84,8 @@ if "models_loaded_webcam" not in st.session_state:
     st.session_state.models_loaded_webcam = False
 if "auto_save_live_frames" not in st.session_state:
     st.session_state.auto_save_live_frames = False
-if "confirm_delete_snapshot_history" not in st.session_state:  # For delete confirmation
+if "confirm_delete_snapshot_history" not in st.session_state:
     st.session_state.confirm_delete_snapshot_history = False
-
-# If snapshots were loaded, ensure they are sorted (e.g., by timestamp_display if available or filename)
-# This ensures newest appear first if that's the desired display logic later.
-# For now, loading order is preserved, which is usually chronological from the file.
 
 # --- Model Loading ---
 
@@ -113,14 +103,13 @@ def load_models_for_webcam():
             # Segmentation model might be optional for some features
             print(
                 f"[WARNING-WebcamPage] Segmentation model not found or not configured: {SEG_MODEL_PATH}")
-            # For now, let's allow proceeding without it, but LiveModelPredictor should handle it
             seg_loader = None
         else:
             seg_loader = SegmentationModelLoader(SEG_MODEL_PATH)
 
         bbox_loader = BoundingBoxModelLoader(BBOX_MODEL_PATH)
         predictor = LiveModelPredictor(
-            bbox_loader, seg_loader)  # seg_loader can be None
+            bbox_loader, seg_loader)
         print("[DEBUG-WebcamPage] LiveModelPredictor initialized.")
         st.session_state.models_loaded_webcam = True
         return predictor
@@ -155,7 +144,6 @@ with st.sidebar:
         "Confidence threshold for detections", 0.0, 1.0, 0.35, step=0.05)
 
     st.subheader("Defect Types to Detect")
-    # Using multiselect for target classes
     selected_target_classes = st.multiselect(
         "Select defect types:",
         options=AVAILABLE_CLASSES,
@@ -213,23 +201,22 @@ with st.sidebar:
         if st.sidebar.button("Cancel Snapshot History Deletion"):
             st.session_state.confirm_delete_snapshot_history = False
             st.rerun()
-    elif st.session_state.snapshots:  # Only show delete button if there is history
+    elif st.session_state.snapshots:
         if st.sidebar.button("Delete Snapshot History"):
             st.session_state.confirm_delete_snapshot_history = True
             st.rerun()
     else:
-        # Ensure it's false if no history
         st.session_state.confirm_delete_snapshot_history = False
 
 # --- Main Content Area ---
-col1, col2 = st.columns([3, 1])  # Adjusted column ratio for better layout
+col1, col2 = st.columns([3, 1])
 
 with col1:
     st.subheader("Camera Feed")
     camera_image_buffer = st.camera_input(
         "Enable webcam to start analysis", key="webcam_feed")
 
-detections_this_frame = []  # To store detections from the current frame
+detections_this_frame = []
 
 if camera_image_buffer is not None and st.session_state.live_predictor:
     try:
@@ -256,27 +243,22 @@ if camera_image_buffer is not None and st.session_state.live_predictor:
             highlight_defects=highlight_detected_defects
         )
 
-        # Convert processed frame back to RGB for Streamlit display
         processed_frame_rgb = cv2.cvtColor(
             processed_frame_bgr, cv2.COLOR_BGR2RGB)
 
-        with col1:  # Display processed image in the first column
+        with col1:
             st.image(processed_frame_rgb,
                      caption="Live feed with detections", use_container_width=True)
 
-            # Update FPS and frame count
             st.session_state.frame_count += 1
             elapsed_time = time.time() - st.session_state.start_time
-            if elapsed_time > 1:  # Update FPS every second to avoid erratic display
+            if elapsed_time > 1:
                 st.session_state.fps = st.session_state.frame_count / elapsed_time
-                # Reset for next calculation period to get more real-time FPS
                 st.session_state.start_time = time.time()
                 st.session_state.frame_count = 0
 
-            # Snapshot button
             if st.button("📸 Take Snapshot & Save Details", key="snapshot_btn"):
                 timestamp_str = time.strftime("%Y%m%d-%H%M%S")
-                # Add milliseconds for higher uniqueness if snapshots are taken rapidly
                 ms_timestamp = int(time.time() * 1000)
                 snapshot_filename = f"snapshot_{timestamp_str}_{ms_timestamp % 1000}.png"
                 snapshot_path = os.path.join(SNAPSHOT_DIR, snapshot_filename)
@@ -293,10 +275,8 @@ if camera_image_buffer is not None and st.session_state.live_predictor:
                         "settings_used": current_detection_settings.copy()
                     }
                     st.session_state.snapshots.append(new_snapshot_details)
-                    # Keep snapshots sorted by unix timestamp, newest first for display
                     st.session_state.snapshots.sort(
                         key=lambda x: x.get('timestamp_unix', 0), reverse=True)
-                    # Limit history size (e.g., last 50 snapshots)
                     SNAPSHOT_HISTORY_LIMIT = 50
                     st.session_state.snapshots = st.session_state.snapshots[:SNAPSHOT_HISTORY_LIMIT]
                     save_snapshot_history_to_file(
@@ -307,7 +287,6 @@ if camera_image_buffer is not None and st.session_state.live_predictor:
                     st.error(f"Error saving snapshot: {e}")
                     print(f"[ERROR-WebcamPage] Saving snapshot: {e}")
 
-            # Auto-save frame if option is enabled and detections are present
             if st.session_state.auto_save_live_frames and detections_this_frame:
                 try:
                     current_time_ms = int(time.time() * 1000)
@@ -315,12 +294,10 @@ if camera_image_buffer is not None and st.session_state.live_predictor:
                     auto_save_path = os.path.join(
                         LIVE_PREDICTIONS_DIR, auto_save_filename)
                     Image.fromarray(processed_frame_rgb).save(auto_save_path)
-                    # This print statement is for debugging; avoid st.write or st.info here to prevent clutter
                     print(
                         f"[DEBUG-WebcamPage] Auto-saved frame with detections to {auto_save_path}")
                 except Exception as e:
                     print(f"[ERROR-WebcamPage] Error auto-saving frame: {e}")
-                    # Optionally, provide a less intrusive notification if auto-save fails, e.g., a small warning icon.
 
     except Exception as e:
         with col1:
@@ -340,10 +317,8 @@ with col2:
     st.subheader("Live Analysis")
 
     if camera_image_buffer is not None and st.session_state.live_predictor:
-        # Display current frame's detection results
         if detections_this_frame:
             st.markdown("**Detected Defects (Current Frame):**")
-            # Create a simple display for current detections
             for det in detections_this_frame:
                 st.markdown(
                     f"- **{det.get('type', 'N/A')}**: {det.get('confidence', 0.0):.2f} conf.")
@@ -359,9 +334,8 @@ with col2:
 
     # Display Snapshots
     if st.session_state.snapshots:
-        st.markdown("--- ")  # Visual separator
+        st.markdown("--- ")
         st.subheader("Saved Snapshots History")
-        # Display snapshots sorted by timestamp (newest first due to sort on save)
         snapshot_options = {f"{s.get('timestamp_display', 'N/A')} - {s.get('filename', 'Unknown')}": i
                             for i, s in enumerate(st.session_state.snapshots)}
 
@@ -395,7 +369,7 @@ with col2:
                         with st.expander("Settings used for this snapshot"):
                             st.json(selected_snap_details.get(
                                 "settings_used", {}))
-                except FileNotFoundError:  # Should be caught by os.path.exists, but as a fallback
+                except FileNotFoundError:
                     st.error(
                         f"Snapshot image file not found: {selected_snap_details['image_path']}.")
                 except Exception as e:
@@ -403,7 +377,6 @@ with col2:
     else:
         st.info("No snapshots taken yet or history is empty.")
 
-# --- Instructions and Warnings ---
 st.markdown("--- ")
 with st.expander("ℹ️ How to Use & Requirements"):
     st.markdown("""

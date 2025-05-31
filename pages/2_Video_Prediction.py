@@ -1,11 +1,8 @@
 import streamlit as st
 import os
-import cv2  # For video processing, ensure it's in requirements.txt
 import time
 import pandas as pd
-import numpy as np  # For potential direct frame manipulation if needed
-from PIL import Image  # For displaying frames
-import json  # For history
+import json
 
 # --- Session State Initialization ---
 if 'video_analysis_results' not in st.session_state:  # For currently run analysis
@@ -19,7 +16,6 @@ if 'confirm_delete_video_history' not in st.session_state:  # For delete confirm
 if 'video_upload_key_counter' not in st.session_state:  # To reset file_uploader on demand
     st.session_state.video_upload_key_counter = 0
 
-# Assuming 'packages' is in PYTHONPATH or structure allows this import
 from packages.utils.model_loader import BoundingBoxModelLoader, SegmentationModelLoader
 from packages.video_model_predictor import VideoModelPredictor
 
@@ -27,11 +23,8 @@ from packages.video_model_predictor import VideoModelPredictor
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BBOX_MODEL_PATH = os.path.join(BASE_DIR, "models", "bbox.pt")
 SEG_MODEL_PATH = os.path.join(BASE_DIR, "models", "segment.pt")
-# For uploaded original videos
 UPLOAD_DIR = os.path.join(BASE_DIR, "data", "uploads")
-# For processed frames/videos
 OUTPUT_DIR = os.path.join(BASE_DIR, "data", "predictions")
-# Directory for history files
 HISTORY_DIR = os.path.join(BASE_DIR, "data", "history")
 VIDEO_HISTORY_FILE_PATH = os.path.join(
     HISTORY_DIR, "video_prediction_history.json")
@@ -95,8 +88,6 @@ if not st.session_state.video_prediction_history:
     if loaded_history:
         st.session_state.video_prediction_history = loaded_history
 
-# Cached function to load models
-
 
 @st.cache_resource
 def load_models_for_video():
@@ -132,7 +123,7 @@ video_model_predictor = load_models_for_video()
 
 # --- Sidebar: Video Prediction History ---
 st.sidebar.subheader("Video Prediction History")
-if not video_model_predictor:  # Also check if models loaded before enabling history interaction tied to re-analysis
+if not video_model_predictor:
     st.sidebar.error(
         "Models not loaded. Video analysis & history features disabled.")
 elif not st.session_state.video_prediction_history:
@@ -140,19 +131,17 @@ elif not st.session_state.video_prediction_history:
 else:
     # Display newest first
     for i, entry in enumerate(reversed(st.session_state.video_prediction_history)):
-        # Ensure original_video_filename exists, provide a fallback
         display_name = entry.get(
             'original_video_filename', f"Analysis {entry.get('id', 'N/A')}")
         if st.sidebar.button(f"{entry.get('timestamp', 'N/A')} - {display_name}", key=f"video_history_{entry.get('id', i)}"):
             st.session_state.active_video_analysis_details = entry
-            # Clear any results from a direct run
             st.session_state.video_analysis_results = None
-            st.session_state.confirm_delete_video_history = False  # Reset delete confirmation
+            st.session_state.confirm_delete_video_history = False
             print(
                 f"[DEBUG-VideoPage] Selected video history item: {entry.get('id', 'N/A')}")
             st.rerun()
 
-if video_model_predictor:  # Show ready message only if models are truly ready
+if video_model_predictor:
     st.sidebar.success("Models ready for video analysis!")
 
 # Delete Video History Section in Sidebar
@@ -200,7 +189,6 @@ if st.session_state.confirm_delete_video_history:
     if st.sidebar.button("Cancel Video History Deletion"):
         st.session_state.confirm_delete_video_history = False
         st.rerun()
-# Only show if history exists and models loaded
 elif st.session_state.video_prediction_history and video_model_predictor:
     if st.sidebar.button("Delete Video Prediction History"):
         st.session_state.confirm_delete_video_history = True
@@ -216,12 +204,9 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file is not None:
-    # When a new file is uploaded, clear any selected historical analysis
-    # to avoid confusion. The new upload takes precedence for the main interaction area.
     if st.session_state.active_video_analysis_details and \
        st.session_state.active_video_analysis_details.get("original_video_filename") != uploaded_file.name:
-        st.session_state.active_video_analysis_details = None  # Clear old history view
-        # Potentially rerun if needed, or let the flow continue to analysis button
+        st.session_state.active_video_analysis_details = None
 
     st.video(uploaded_file)
 
@@ -250,14 +235,13 @@ if uploaded_file is not None:
         if video_model_predictor is None:
             st.error("Video model predictor not available.")
         else:
-            st.session_state.video_analysis_results = None  # Clear previous run results
-            st.session_state.active_video_analysis_details = None  # Clear active history view
+            st.session_state.video_analysis_results = None
+            st.session_state.active_video_analysis_details = None
 
             with st.spinner("Analyzing video... This might take a while."):
                 timestamp = time.strftime("%Y%m%d-%H%M%S")
                 unique_timestamp_id = f"{timestamp}_{int(time.time()*1000) % 1000}"
 
-                # Define persistent path for the original uploaded video
                 original_video_filename_ext = os.path.splitext(uploaded_file.name)[
                     1]
                 persistent_original_video_name = f"{unique_timestamp_id}_orig{original_video_filename_ext}"
@@ -312,7 +296,6 @@ if uploaded_file is not None:
                     # Add to history
                     st.session_state.video_prediction_history.append(
                         current_analysis_data)
-                    # Keep last 10
                     st.session_state.video_prediction_history = st.session_state.video_prediction_history[-10:]
                     save_video_history_to_file(
                         st.session_state.video_prediction_history)
@@ -326,11 +309,9 @@ if uploaded_file is not None:
                         st.warning(
                             "Save output was checked, but no processed video path was returned. It might not have been saved if no detections occurred or an issue arose.")
 
-                    # No need to delete persistent_original_video_path as it's part of history
                 except Exception as e:
                     st.error(f"An error occurred during video analysis: {e}")
                     print(f"[ERROR-VideoPage] Analysis error: {e}")
-                    # Potentially remove persistent_original_video_path if analysis failed critically before history save
                     if 'persistent_original_video_path' in locals() and os.path.exists(persistent_original_video_path) and \
                        not any(h.get('original_video_path') == persistent_original_video_path for h in st.session_state.video_prediction_history):
                         try:
@@ -380,11 +361,9 @@ if active_details_to_display:
             except Exception as e:
                 st.error(
                     f"Could not load processed video: {e}. Path: {processed_video_path_from_history}")
-        # Path recorded but not found
         elif details.get('parameters', {}).get('save_output') and processed_video_path_from_history:
             st.warning(
                 f"Processed video file not found at: {processed_video_path_from_history}. It may have been moved or deleted.")
-        # Should have been saved but no path
         elif details.get('parameters', {}).get('save_output'):
             st.info(
                 "Processed video was meant to be saved, but is not available. It might have had no detections or failed to save.")
@@ -429,7 +408,6 @@ if active_details_to_display:
             'processed_individual_frames_paths', [])
         if processed_individual_frames:
             st.markdown("**Saved Processed Frames (Sample):**")
-            # Show up to 5
             for frame_path in processed_individual_frames[:min(5, len(processed_individual_frames))]:
                 if os.path.exists(frame_path):
                     st.image(frame_path, caption=os.path.basename(
@@ -491,7 +469,6 @@ if active_details_to_display:
 elif uploaded_file is None and not st.session_state.active_video_analysis_details:
     st.info("Upload a video to begin analysis or select an item from the video history sidebar.")
 
-# Instructions expander
 with st.expander("How to use this tool"):
     st.markdown("""
     1. Ensure models are `bbox.pt` and `segment.pt` in `models/`.
