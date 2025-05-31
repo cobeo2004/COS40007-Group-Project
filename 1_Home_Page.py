@@ -124,13 +124,13 @@ with st.sidebar:
     st.subheader("Project Stats")
     col1, col2 = st.columns(2)
     col1.metric("⚙️ Models", "2")
-    col2.metric("🖼️ Dataset", "900+ images")
+    col2.metric("🖼️ Dataset", "3k+ images")
 
     # Technical details
-    st.markdown("---")
-    st.subheader("Technical Details")
-    st.markdown(
-        """
-    To be updated
-    """
-    )
+    # st.markdown("---")
+    # st.subheader("Technical Details")
+    # st.markdown(
+    #     """
+    # To be updated
+    # """
+    # )
