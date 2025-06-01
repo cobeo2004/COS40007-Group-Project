@@ -6,7 +6,7 @@ This model is trained on a custom dataset of structural defect images to detect 
 
 ### Download Instructions
 
-1. Download the model from [YOLOv8 Crack Detection Model](https://drive.google.com/file/d/1LzMvNrrZJIXPYJV1y6qoKMEHSGa99y1z/view?usp=sharing)
+1. Download the model from [YOLOv8 Crack Detection Model](https://drive.google.com/file/d/1d8cWyAXJAawUuALku0j37J1L6YoLIJda/view?usp=sharing)
 2. Rename the downloaded file to `bbox.pt`
 3. Place it in this `models/` directory
 
@@ -16,7 +16,7 @@ This model performs semantic segmentation to identify and outline tower structur
 
 ### Download Instructions
 
-1. Download the model from [YOLOv8 Tower Segmentation Model](https://drive.google.com/file/d/1MR5Vls76tdoWXPlngE3ADvPYQM3laBi0/view?usp=sharing)
+1. Download the model from [YOLOv8 Tower Segmentation Model](https://drive.google.com/file/d/1J53Ay-3yiN3lJbKp0_-R1l3yNqefC4_X/view?usp=sharing)
 2. Rename the downloaded file to `segment.pt`
 3. Place it in this `models/` directory
 

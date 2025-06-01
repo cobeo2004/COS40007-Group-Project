@@ -115,7 +115,7 @@ Future versions will include severity scoring, maintenance recommendations, and 
 ### Project Stats
 
 - Models: 2
-- Dataset: 900+ images
+- Dataset: 3K+ images
 
 ### Technical Details
 
