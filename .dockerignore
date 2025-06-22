@@ -1,0 +1,8 @@
+﻿.git
+__pycache__
+*.pyc
+.streamlit
+*.jpg
+*.png
+*.mp4
+*.avi
